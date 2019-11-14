@@ -1,0 +1,55 @@
+---
+- name: Install Apache
+  hosts: all
+  become: yes
+
+  vars:
+    source_file: ./websrv
+    dest_folder: /var/www/html
+
+
+
+  tasks:
+  - block: ### INSTALLING APACHE FOR DEBIAN OS FAMILY ###
+    - name: Install Apache Web Server
+      apt: name=apache2 state=latest
+
+    - name: Start and add autoload Apache server
+      service: name=apache2 state=started enabled=yes
+
+    when: ansible_os_family == "Debian"
+
+  - block: ### INSTALLING APACHE FOR REDHAT OS FAMILY ###
+    - name: Install Apache Web Server
+      yum: name=httpd state=latest
+
+
+    - name: Start and add autoload Apache server
+      service: name=httpd state=started enabled=yes
+
+    when: ansible_os_family == "RedHat"
+    
+  - name: Generate index.html
+    template: src={{ source_file  }}/index.j2 dest={{ dest_folder }}/index.html mode=0555
+    notify:
+      - Restart Apache Debian
+      - Restart Apache RedHat
+
+  - name: Copy file for webserver
+    copy: src={{ source_file }}/{{ item }} dest={{ dest_folder }}/{{ item }} mode=0555
+    loop:
+      - "img/"
+      - "fonts/"
+      - "css/"
+    notify:
+      - Restart Apache Debian
+      - Restart Apache RedHat 
+
+  handlers:
+  - name: Restart Apache Debian
+    service: name=apache2 state=restarted
+    when: ansible_os_family == "Debian"
+
+  - name: Restart Apache RedHat
+    service: name=httpd state=restarted
+    when: ansible_os_family == "RedHat"

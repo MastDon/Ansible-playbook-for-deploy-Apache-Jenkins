@@ -1,0 +1,10 @@
+---
+- name: Starting deploy
+  hosts: all
+  become: yes
+
+
+
+  roles: 
+    -  { role: install_apache_with_default_website, when: ec2_tag_Group == "prod" }
+    -  { role: deploy_jenkins, when: ec2_tag_Group ==  "jenkins_prod" }

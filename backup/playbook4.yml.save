@@ -1,0 +1,29 @@
+---
+- name: Install Apache for Debian and RedHat systems
+  hosts: all
+  become: yes
+
+  vars:
+    source_file: ./websrv/
+    dest_folder: /var/www/html
+
+
+
+  tasks:
+
+  - block: ####### INSTALL APACHE FOR DEBIAN OS FAMILY #######
+
+  	- name: Install Apache  for Debian  OS
+    	apt: name=apache2 state=latest
+
+  	- name: Copy source file for webserver
+    	copy: src={{ source_file }} dest={{ dest_folder }} mode=0555
+    notify: Restart Apache
+
+  - name: Restart and add autoload Apache server
+    service: name=apache2 state=started enabled=yes
+
+
+  handlers:
+  - name: Restart Apache
+    service: name=apache2 state=restarted
